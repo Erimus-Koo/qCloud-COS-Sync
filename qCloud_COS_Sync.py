@@ -81,7 +81,7 @@ def ignoreFiles(localFilesDict):
 		if fileName[0]=='.': #file start with '.'
 			ignore = True
 
-		ignoreExts = ['exe','py'] #ignore extension list
+		ignoreExts = ['exe','py','psd','ai'] #ignore extension list
 		try:
 			extension = re.findall(r'(?<=.)(?!.*\.).*',file)[0].lower()
 		except:
@@ -209,7 +209,7 @@ def uploadToCos(cos_client,bucket,root,localFile):
 			upload_file_ret = cos_client.upload_file(request)
 			if upload_file_ret['message']==u'SUCCESS':
 				succes = 1
-			print 'Upload | %s | %s'%(localFile,upload_file_ret['message'])
+			print 'Upload | %-10s | %s'%(upload_file_ret['message'],localFile)
 		except:
 			pass
 	if times==10:
@@ -243,7 +243,7 @@ def deleteCosFile(cos_client,bucket,cosFile):
 			# print cosFile+formatJSON(del_ret)
 			if del_ret['message']==u'SUCCESS':
 				succes = 1
-			print 'Delete | %s | %s'%(cosFile,del_ret['message'])
+			print 'Delete | %-10s | %s'%(del_ret['message'],cosFile)
 		except:
 			pass
 	if times==10:
@@ -255,7 +255,7 @@ def deleteCosFolder(cos_client,bucket,folder):
 	try:
 		request = DelFolderRequest(bucket, folder)
 		delete_folder_ret = cos_client.del_folder(request)
-		print 'Delete | %s | %s'%(folder,delete_folder_ret['message'])
+		print 'Delete | %-10s | %s'%(delete_folder_ret['message'],folder)
 	except:
 		print 'Error: deleteCosFolder | %s'%folder
 
@@ -265,7 +265,7 @@ def createCosFolder(cos_client,bucket,folder):
 	try:
 		request = CreateFolderRequest(bucket, folder)
 		create_folder_ret = cos_client.create_folder(request)
-		print 'Create | %s | %s'%(folder,create_folder_ret['message'])
+		print 'Create | %-10s | %s'%(create_folder_ret['message'],folder)
 	except:
 		print 'Error: createCosFolder | %s'%folder
 
