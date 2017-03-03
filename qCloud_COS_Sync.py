@@ -274,13 +274,20 @@ def createCosFolder(cos_client,bucket,folder):
 def syncEmptyFolders(cos_client,bucket,localEmptyFolders,cosEmptyFolders):
 	start = datetime.now()
 	drawTitle('Sync empty folders')
+
+	createFolderNum=0
 	for folder in localEmptyFolders:
 		if folder not in cosEmptyFolders:
 			createCosFolder(cos_client,bucket,folder)
+			createFolderNum += 1
 		else:
 			cosEmptyFolders.remove(folder)
+	print 'Create folder(s): %s'%(createFolderNum)
+
 	for folder in cosEmptyFolders:
 		deleteCosFolder(cos_client,bucket,folder)
+	print 'Delete folder(s): %s'%len(cosEmptyFolders)
+
 	print '---\n%s: %s'%('Used',datetime.now()-start)
 
 
