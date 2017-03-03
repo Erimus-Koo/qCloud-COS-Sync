@@ -42,9 +42,18 @@ def readLocalFiles(root,subFolder=u''):
 	subFolder=re.sub(r'\\',u'/',subFolder).lstrip('\\/').rstrip('\\/')
 
 	localFilesDict,localEmptyFolders = {},[]
+	ignoreFoldersNum=ignoreFilesNum=0 #ignore计数
 	for path, dirs, files in os.walk(root+'/'+subFolder):
+		if ignoreFolder(path[len(root):]):
+			ignoreFoldersNum += 1
+			continue
+
 		total = len(files)
 		for i,fileName in enumerate(files[:]):
+			if ignoreFile(fileName):
+				ignoreFilesNum += 1
+				continue
+
 			localFile = (path+'/'+fileName)[len(root):]
 			localFile = re.sub(r'\\',u'/',localFile) #斜杠转换
 			localFile = re.sub(r'//',u'/',localFile) #根目录重复斜杠
@@ -60,6 +69,7 @@ def readLocalFiles(root,subFolder=u''):
 			localEmptyFolders.append(emptyFolder)
 
 	print 'Local Files: %s\nLocal Empty Folders: %s'%(len(localFilesDict),len(localEmptyFolders))
+	print '\n-Ignored folders: %s\n-Ignored files: %s'%(ignoreFoldersNum,ignoreFilesNum)
 	# print 'localFilesDict'+formatJSON(localFilesDict.keys()[:20])
 	if localEmptyFolders:
 		print '---\nlocalEmptyFolders'+formatJSON(localEmptyFolders)
@@ -68,36 +78,36 @@ def readLocalFiles(root,subFolder=u''):
 
 
 
-def ignoreFiles(localFilesDict):
-	drawTitle('Ignore specific files')
-	ignoreList = []
-	for file in localFilesDict.keys():
-		ignore = False
-		if '/.git/' in file: #.git folder
+def ignoreFile(fileName):
+	ignore = False
+
+	if fileName[0]=='.': #file start with '.'
+		ignore = True
+
+	try:
+		extension = re.findall(r'(?<=.)(?!.*\.).*',fileName)[0].lower()
+	except:
+		extension = ''
+	# print extension
+	ignoreExts = ['exe','py','psd','ai'] #ignore extension list
+	for ext in ignoreExts:
+		if extension==ext:
 			ignore = True
 
-		fileName = re.findall(r'(?<=/)(?!.*/).*',file)[0]
-		# print fileName
-		if fileName[0]=='.': #file start with '.'
-			ignore = True
+	return ignore
 
-		ignoreExts = ['exe','py','psd','ai'] #ignore extension list
-		try:
-			extension = re.findall(r'(?<=.)(?!.*\.).*',file)[0].lower()
-		except:
-			extension = ''
-		# print extension
-		for ext in ignoreExts:
-			if extension==ext:
-				ignore = True
 
-		if ignore:
-			localFilesDict.pop(file)
-			ignoreList.append(file)
 
-	print 'Ignore Files: %s\nLocal files need to be compared: %s'%(len(ignoreList),len(localFilesDict))
-	# print 'ignoreList'+formatJSON(ignoreList[:10])
-	return localFilesDict
+def ignoreFolder(path):
+	path=re.sub(r'\\',u'/',path)
+
+	ignore = False
+
+	if '.git' in path:
+		ignore = True
+
+	return ignore
+
 
 
 def readCosFiles(cos_client,bucket,subFolder=''):
@@ -300,7 +310,6 @@ def syncLocalToCOS(appid,secret_id,secret_key,bucket,root,subFolder=''):
 		raise Exception('\n'+drawTitle('Check your appid / secret_id / secret_key / bucket_name'))
 
 	localFilesDict,localEmptyFolders = readLocalFiles(root,subFolder) #读取本地需要更新的目录
-	localFilesDict = ignoreFiles(localFilesDict) #忽略部分文件 具体规则内详
 	cosFilesDict,cosEmptyFolders = readCosFiles(cos_client,bucket,subFolder) #读取cos上需要更新的目录
 	# # print 'localFilesDict'+formatJSON(localFilesDict)
 	# # print 'cosFilesDict'+formatJSON(cosFilesDict)
