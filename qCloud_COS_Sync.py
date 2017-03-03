@@ -294,6 +294,10 @@ def syncEmptyFolders(cos_client,bucket,localEmptyFolders,cosEmptyFolders):
 
 def syncLocalToCOS(appid,secret_id,secret_key,bucket,root,subFolder=''):
 	cos_client = CosClient(appid, secret_id, secret_key)
+	# check cos_client & bucket
+	list_folder_ret = cos_client.list_folder(ListFolderRequest(bucket, u'/'))
+	if list_folder_ret['message']!='SUCCESS':
+		raise Exception('\n'+drawTitle('Check your appid / secret_id / secret_key / bucket_name'))
 
 	localFilesDict,localEmptyFolders = readLocalFiles(root,subFolder) #读取本地需要更新的目录
 	localFilesDict = ignoreFiles(localFilesDict) #忽略部分文件 具体规则内详
