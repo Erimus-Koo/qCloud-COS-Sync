@@ -13,6 +13,7 @@
 pip install qcloud_cos_v4
 ```
 [官方 Pyethon SDK 文档](https://www.qcloud.com/document/product/436/6275)
+>*这个文档倒是一直有在更新，但因为升级了 Python3.6 想更新下，结果发现这玩意儿只支持到 Python2.7。无奈。*
 
 # 配置参数
 看代码最下端
