@@ -352,8 +352,8 @@ if __name__ == '__main__':
 		root = u'D:\\OneDrive\\erimus-koo.github.io' #PC
 	else:
 		root = u'/Users/Erimus/OneDrive/erimus-koo.github.io' #MAC
-	subFolder=u'' #仅更新root下指定目录
-	# subFolder=u'bilibili' #无需指定的话直接注释本行
+	subFolder = u'' #仅更新root下指定目录
+	# subFolder = u'bilibili' #无需指定的话直接注释本行
 
 	# Main Progress
 	syncLocalToCOS(appid,secret_id,secret_key,bucket,root,subFolder)

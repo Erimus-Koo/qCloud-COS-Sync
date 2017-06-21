@@ -41,8 +41,8 @@ else:
 
 **subFolder** 仅更新root下指定目录
 ```
-subFolder=u'' #仅更新root下指定目录
-subFolder=u'bilibili' #无需指定的话直接注释本行
+subFolder = u'' #仅更新root下指定目录
+subFolder = u'bilibili' #无需指定的话直接注释本行
 ```
 
 **ignoreFiles** 目前是排除了git相关文件，还有exe、py等。具体可以自行调节。
