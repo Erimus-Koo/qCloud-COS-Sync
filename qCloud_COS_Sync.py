@@ -302,8 +302,8 @@ def syncEmptyFolders(cos_client,bucket,localEmptyFolders,cosEmptyFolders):
 
 
 
-def syncLocalToCOS(appid,secret_id,secret_key,bucket,root,subFolder=''):
-	cos_client = CosClient(appid, secret_id, secret_key)
+def syncLocalToCOS(appid,secret_id,secret_key,bucket,region_info,root,subFolder=''):
+	cos_client = CosClient(appid, secret_id, secret_key, region=region_info)
 	# check cos_client & bucket
 	list_folder_ret = cos_client.list_folder(ListFolderRequest(bucket, u'/'))
 	if list_folder_ret['message']!='SUCCESS':
@@ -340,14 +340,16 @@ def syncLocalToCOS(appid,secret_id,secret_key,bucket,root,subFolder=''):
 
 
 if __name__ == '__main__':
-	# 初始化客户端。在【云key密钥/项目密钥】找到appid和配套的key，填写下面3个值。
+	# 初始化客户端。在【云key密钥/项目密钥】找到appid和配套的key，填写下面4个值。
 	appid = 88888888
 	secret_id = u'YOUR_ID'
 	secret_key = u'YOUR_KEY'
+	region_info = 'sh' #'sh'=华东,'gz'=华南,'tj'=华北 ,('sgp'~=新加坡)
+
 
 	# 填写同步目录。COS端的bucket，本地的root，可以指定root下的单个目录(optional)。
 	bucket = u'YOUR_BUCKET_NAME' #上述appid对应项目下的bucket name
-	# 本地根目录 对应bucket根目录
+	# 本机根目录 对应bucket根目录
 	if os.name == 'nt':
 		root = u'D:\\OneDrive\\erimus-koo.github.io' #PC
 	else:
@@ -356,4 +358,4 @@ if __name__ == '__main__':
 	# subFolder = u'bilibili' #无需指定的话直接注释本行
 
 	# Main Progress
-	syncLocalToCOS(appid,secret_id,secret_key,bucket,root,subFolder)
+	syncLocalToCOS(appid,secret_id,secret_key,bucket,region_info,root,subFolder)

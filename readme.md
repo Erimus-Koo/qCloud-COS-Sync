@@ -18,11 +18,12 @@ pip install qcloud_cos_v4
 # 配置参数
 看代码最下端
 ## 初始化客户端
-在【云key密钥/项目密钥】找到appid和配套的key，填写下面3个值。
+在【云key密钥/项目密钥】找到appid和配套的key，填写下面4个值。
 ```
 appid = 88888888
 secret_id = u'YOUR_ID'
 secret_key = u'YOUR_KEY'
+region_info = 'sh' #'sh'=华东,'gz'=华南,'tj'=华北 ,('sgp'~=新加坡)
 ```
 ## 填写同步目录
 设定本地特定目录为root，对应bucket根目录。还可以指定仅更新某个目录。
