@@ -35,7 +35,7 @@ def formatPath(path):
 	path = path.replace('\\','/')
 	while '//' in path:
 		path = path.replace('//','/')
-	return path.strip('/')
+	return path.rstrip('/')
 
 
 # ====================
