@@ -1,3 +1,10 @@
+### 更新py3支持
+`qCloud_COS_Sync_py3.py` 就是支持python3的版本。  
+先要安装python3可用的SDK。我用的是 [@a270443177的版本](https://github.com/a270443177/cos-python3-sdk-v4)。  
+> 不过目前其中`cos_op.py`文件里有两处`print`，会打印所有网络操作的本地和COS文件名，我是注释掉再安装的。  
+
+---
+
 # 功能
 * 这是一个腾讯云COS的同步工具（仅上传更新过的文件）。
 * 可指定更新个别目录。
@@ -47,7 +54,12 @@ subFolder = u'' #仅更新root下指定目录
 subFolder = u'bilibili' #无需指定的话直接注释本行
 ```
 
-**ignoreFiles** 目前是排除了git相关文件，还有exe、py等。具体可以自行调节。
+## 打印信息
+**debug** `py3独占` 开启打印较详细信息，关闭打印较精简信息。
+
+## 忽略文件/文件夹
+**ignoreFiles / ignoreFolders** 这两个函数可以自己去设定。  
+目前是排除了git相关文件，还有exe、py等等。  
 
 # 工作流程
 * 扫描指定的本地目录，搜集基于root的相对地址及文件名，还有修改时间。并搜集空文件夹信息。
