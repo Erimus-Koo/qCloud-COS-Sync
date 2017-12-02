@@ -1,7 +1,8 @@
 ### 更新py3支持
 `qCloud_COS_Sync_py3.py` 就是支持python3的版本。  
+
 先要安装python3可用的SDK。我用的是 [@a270443177的版本](https://github.com/a270443177/cos-python3-sdk-v4)。  
-> 不过目前其中`cos_op.py`文件里有两处`print`，会打印所有网络操作的本地和COS文件名，我是注释掉再安装的。  
+> 不过目前上述SDK中`cos_op.py`文件里有两处`print`，会打印所有网络操作的本地和COS文件名，我是注释掉再安装的。  
 
 ---
 
