@@ -91,9 +91,16 @@ def isIgnoreFile(fileName): #忽略文件
 	# file start with '.' 隐藏文件
 	if fileName[0]=='.': return True
 
-	ignoreExts = ['exe','py','psd','ai'] #ignore extension list
+	ignoreExts = ['exe','py','psd','ai','xlsx'] #ignore extension list
 	extension = fileName.split('.')[-1].lower() #获取扩展名
 	if extension in ignoreExts: return True
+
+	# 个人网页专用忽略项
+	if extension in ['less']: return True
+	if '.html' in fileName:
+		if fileName=='index.html': return
+		if '.min.html' in fileName: return
+		return True #过滤非首页且没有Minify过的网页源文件
 
 
 # ====================
