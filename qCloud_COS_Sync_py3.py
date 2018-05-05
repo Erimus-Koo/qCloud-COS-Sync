@@ -14,8 +14,8 @@ from qcloud_cos import *
 
 【重要】使用前务必做好备份！做好备份！做好备份！这是一个美工写的工具，请谨慎使用。
 
-准备工作，安装SDK。
-pip install qcloud_cos_v4
+准备工作，安装以下SDK（已修改支持py3）。
+https://github.com/a270443177/cos-python3-sdk-v4
 
 设定本地特定目录为root，对应bucket根目录。还可以指定仅更新某个目录。
 会比较本地和COS上文件的修改时间，仅上传较新的文件。
@@ -23,17 +23,15 @@ pip install qcloud_cos_v4
 会忽略部分文件，具体搜ignoreFiles部分。
 """
 
+
 # Draw title with Frame
-
-
 def drawTitle(string):
     width = (len(string) + len(string.encode('utf-8'))) // 2
     hr = '=' * (width + 8)
     print('\n%s\n>>> %s <<<\n%s' % (hr, string, hr))
 
+
 # Print format JSON
-
-
 def formatJSON(obj, indent=4):
     return json.dumps(obj, ensure_ascii=False, indent=indent)
 
@@ -55,7 +53,7 @@ def readLocalFiles(root, subFolder='', debug=1):
 
     localFilesDict, localEmptyFolders = {}, []
     ignoreFoldersNum = ignoreFilesNum = 0  # ignore计数
-    for path, dirs, files in os.walk(root + '/' + subFolder):
+    for path, dirs, files in os.walk(os.path.join(root, subFolder)):
         if isIgnoreFolder(path[len(root):]):  # 忽略目录
             ignoreFoldersNum += 1
             continue
@@ -66,9 +64,9 @@ def readLocalFiles(root, subFolder='', debug=1):
                 ignoreFilesNum += 1
                 continue
 
-            localFile = formatPath(path + '/' + fileName)[len(root):]
+            localFile = formatPath(os.path.join(path, fileName))[len(root):]
             # print('local: %s'%localFile)
-            modifyTime = int(os.stat(path + '/' + fileName).st_mtime)
+            modifyTime = int(os.stat(os.path.join(path, fileName)).st_mtime)
             # 输出结果 {'正斜杠相对地址文件名':'int文件修改时间'}
             localFilesDict[localFile] = modifyTime
             # print('%s / %s'%(i+1,total))
