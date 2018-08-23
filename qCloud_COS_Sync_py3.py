@@ -5,6 +5,7 @@ import os
 import re
 import json
 import urllib
+import time
 from datetime import datetime
 from qcloud_cos import *
 
@@ -46,10 +47,9 @@ def formatPath(path):
 # ====================
 
 
-def readLocalFiles(root, subFolder='', debug=1):
+def readLocalFiles(root, subFolder=''):
     start = datetime.now()
-    if debug:
-        drawTitle('Reading local files')
+    drawTitle('Reading local files')
 
     localFilesDict, localEmptyFolders = {}, []
     ignoreFoldersNum = ignoreFilesNum = 0  # ignore计数
@@ -76,16 +76,16 @@ def readLocalFiles(root, subFolder='', debug=1):
             # print(emptyFolder)
             localEmptyFolders.append(emptyFolder)
 
-    if debug:  # 打印详情
-        print('Local Files: %s\nLocal Empty Folders: %s'
-              % (len(localFilesDict), len(localEmptyFolders)))
-        print('\n-Ignored folders (& inner files): %s\n-Ignored files: %s'
-              % (ignoreFoldersNum, ignoreFilesNum))
-        # print('localFilesDict'+formatJSON(localFilesDict.keys()[:20]))
+    # 打印详情
+    print('Local Files: %s\nLocal Empty Folders: %s'
+          % (len(localFilesDict), len(localEmptyFolders)))
+    print('\n-Ignored folders (& inner files): %s\n-Ignored files: %s'
+          % (ignoreFoldersNum, ignoreFilesNum))
+    # print('localFilesDict'+formatJSON(localFilesDict.keys()[:20]))
 
-        if localEmptyFolders:
-            print('\n---\nlocalEmptyFolders: ' + formatJSON(localEmptyFolders))
-        print('\n---\n%s: %s\n' % ('Used', datetime.now() - start))
+    if localEmptyFolders:
+        print('\n---\nlocalEmptyFolders: ' + formatJSON(localEmptyFolders))
+    print('\n---\n%s: %s\n' % ('Used', datetime.now() - start))
 
     return localFilesDict, localEmptyFolders
 
@@ -109,10 +109,10 @@ def isIgnoreFile(fileName):  # 忽略文件
     # 个人网页专用忽略项
     if extension in ['less']:
         return True
-    if '.html' in fileName:
+    if fileName.endswith('.html'):
         if fileName == 'index.html':
             return
-        if '.min.html' in fileName:
+        if fileName.endswith('.min.html'):
             return
         return True  # 过滤非首页且没有Minify过的网页源文件
 
@@ -120,10 +120,9 @@ def isIgnoreFile(fileName):  # 忽略文件
 # ====================
 
 
-def readCosFiles(cos_client, bucket, subFolder='', debug=1):
+def readCosFiles(cos_client, bucket, subFolder=''):
     start = datetime.now()
-    if debug:
-        drawTitle('Reading COS files')
+    drawTitle('Reading COS files')
 
     cosFilesDict, cosEmptyFolders = {}, []
     folderPool = ['/' + subFolder + '/'] if subFolder else ['/']
@@ -170,12 +169,11 @@ def readCosFiles(cos_client, bucket, subFolder='', debug=1):
                 # print(cosFile,type(cosFile))
                 cosFilesDict[cosFile] = item['mtime']
 
-    if debug:
-        print('COS files: %s\nCOS empty folders: %s'
-              % (len(cosFilesDict), len(cosEmptyFolders)))
-        if cosEmptyFolders:
-            print('---\ncosEmptyFolders' + formatJSON(cosEmptyFolders))
-        print('---\n%s: %s' % ('Used', datetime.now() - start))
+    print('COS files: %s\nCOS empty folders: %s'
+          % (len(cosFilesDict), len(cosEmptyFolders)))
+    if cosEmptyFolders:
+        print('---\ncosEmptyFolders' + formatJSON(cosEmptyFolders))
+    print('---\n%s: %s' % ('Used', datetime.now() - start))
 
     return cosFilesDict, cosEmptyFolders
 
@@ -183,9 +181,8 @@ def readCosFiles(cos_client, bucket, subFolder='', debug=1):
 # ====================
 
 
-def filterModifiedLocalFiles(localFilesDict, cosFilesDict, debug=1):
-    if debug:
-        drawTitle('Filtering modified local files')
+def filterModifiedLocalFiles(localFilesDict, cosFilesDict):
+    drawTitle('Filtering modified local files')
 
     modifiedLocalFiles = []
     for i, file in enumerate(localFilesDict):
@@ -223,9 +220,8 @@ def uploadToCos(cos_client, bucket, root, localFile):
 # ====================
 
 
-def filterExtraCosFiles(localFilesDict, cosFilesDict, debug=1):
-    if debug:
-        drawTitle('Filtering extra files on COS')
+def filterExtraCosFiles(localFilesDict, cosFilesDict):
+    drawTitle('Filtering extra files on COS')
 
     extraCosFiles = []
     for file in cosFilesDict:
@@ -280,13 +276,12 @@ def createCosFolder(cos_client, bucket, folder):
 
 
 def syncEmptyFolders(cos_client, bucket,
-                     localEmptyFolders, cosEmptyFolders, debug=1):
+                     localEmptyFolders, cosEmptyFolders):
     start = datetime.now()
-    if debug:
-        drawTitle('Sync empty folders')
+    drawTitle('Sync empty folders')
 
-        if not localEmptyFolders + cosEmptyFolders:
-            print('No empty folder.')
+    if not localEmptyFolders + cosEmptyFolders:
+        print('No empty folder.')
 
     createFolderNum = 0
     for folder in localEmptyFolders:
@@ -310,28 +305,34 @@ def syncEmptyFolders(cos_client, bucket,
 
 
 def syncLocalToCOS(appid, secret_id, secret_key, bucket, region_info,
-                   root, subFolder='', debug=1):
+                   root, subFolder='', debug=0):
     root = formatPath(root)
     subFolder = formatPath(subFolder)
     cos_client = CosClient(appid, secret_id, secret_key, region=region_info)
 
     # check cos_client & bucket
-    list_folder_ret = cos_client.list_folder(ListFolderRequest(bucket, '/'))
-    if list_folder_ret['message'] != 'SUCCESS':
-        raise Exception('>>> Check your appid / secret_id / '
-                        'secret_key / bucket_name <<<')
+    success = 0  # 偶尔会失联 隔一段时间自动重试
+    while not success:
+        list_folder_ret = cos_client.list_folder(ListFolderRequest(bucket, '/'))
+        if list_folder_ret.get('message') == 'SUCCESS':
+            success = 1
+        else:
+            if debug:
+                raise Exception('>>> Check your appid / secret_id / '
+                                'secret_key / bucket_name <<<')
+            else:
+                print('>>>%s<<<\nConnection maybe has some problem, '
+                      'or id / password / bucket wrong.' % datetime.now())
+                time.sleep(30)
 
     # 读取本地需要更新的目录
-    localFilesDict, localEmptyFolders = readLocalFiles(root, subFolder,
-                                                       debug=debug)
+    localFilesDict, localEmptyFolders = readLocalFiles(root, subFolder)
 
     # 读取cos上需要更新的目录
-    cosFilesDict, cosEmptyFolders = readCosFiles(cos_client, bucket, subFolder,
-                                                 debug=debug)
+    cosFilesDict, cosEmptyFolders = readCosFiles(cos_client, bucket, subFolder)
 
     # 比较文件修改时间，筛选出需要更新的文件，并且上传。
-    modifiedLocalFiles = filterModifiedLocalFiles(localFilesDict, cosFilesDict,
-                                                  debug=debug)
+    modifiedLocalFiles = filterModifiedLocalFiles(localFilesDict, cosFilesDict)
     if modifiedLocalFiles:
         start = datetime.now()
         if debug:
@@ -342,8 +343,7 @@ def syncLocalToCOS(appid, secret_id, secret_key, bucket, region_info,
             print('---\n%s: %s' % ('Used', datetime.now() - start))
 
     # 筛选出cos上有，但本地已经不存在的文件，删除COS上的文件。
-    extraCosFiles = filterExtraCosFiles(localFilesDict, cosFilesDict,
-                                        debug=debug)
+    extraCosFiles = filterExtraCosFiles(localFilesDict, cosFilesDict)
     if extraCosFiles:
         start = datetime.now()
         if debug:
@@ -354,8 +354,7 @@ def syncLocalToCOS(appid, secret_id, secret_key, bucket, region_info,
             print('---\n%s: %s' % ('Used', datetime.now() - start))
 
     # 同步空文件夹
-    syncEmptyFolders(cos_client, bucket, localEmptyFolders, cosEmptyFolders,
-                     debug=debug)
+    syncEmptyFolders(cos_client, bucket, localEmptyFolders, cosEmptyFolders)
 
 
 # ====================
@@ -380,4 +379,4 @@ if __name__ == '__main__':
 
     # Main Progress
     syncLocalToCOS(appid, secret_id, secret_key, bucket,
-                   region_info, root, subFolder)
+                   region_info, root, subFolder, debug=1)
