@@ -41,6 +41,10 @@ def formatPath(path):
     return path.replace('\\', '/').strip('/')
 
 
+def ts2uft(ts):
+    return datetime.utcfromtimestamp(ts).strftime('%Y-%m-%dT%H:%M:%S.000Z')
+
+
 # ====================
 
 
@@ -64,6 +68,7 @@ def readLocalFiles(root, subFolder='', ignoreFolders=[]):
             localFile = formatPath(os.path.join(path, fileName)[len(root):])
             # print('local: %s'%localFile)
             modifyTime = int(os.stat(os.path.join(path, fileName)).st_mtime)
+            modifyTime = ts2uft(modifyTime)
             # 输出结果 {'/相对地址文件名':'文件修改时间int'}
             localFilesDict[localFile] = modifyTime
 
@@ -82,7 +87,6 @@ def readLocalFiles(root, subFolder='', ignoreFolders=[]):
     # print(f'localFilesDict: \n{formatJSON(list(localFilesDict.items())[:20])}')
 
     print(f'\n---\nUsed: {datetime.now() - start}\n')
-
     return localFilesDict, localEmptyFolders
 
 
@@ -156,8 +160,10 @@ def readCosFiles(cos_client, bucket, subFolder=''):
             if fn.endswith('/'):  # 空文件夹
                 cosEmptyFolders.append(fn)
             else:  # 文件
-                mt = k['LastModified'].split('.')[0]
-                mt = int(time.mktime(time.strptime(mt, '%Y-%m-%dT%H:%M:%S')))
+                mt = k['LastModified']
+                if '.000Z' not in mt:
+                    print('Time format changed!!!', mt)
+                    raise
                 cosFilesDict[fn] = mt
 
     print(f'COS files: {len(cosFilesDict)}\n'
@@ -166,6 +172,8 @@ def readCosFiles(cos_client, bucket, subFolder=''):
         print('---\ncosEmptyFolders: ' + formatJSON(cosEmptyFolders))
     print('---\n%s: %s' % ('Used', datetime.now() - start))
     # print(f'cosFilesDict: \n{formatJSON(list(cosFilesDict.items())[:20])}')
+
+    print(f'\n---\nUsed: {datetime.now() - start}\n')
     return cosFilesDict, cosEmptyFolders
 
 
@@ -177,11 +185,11 @@ def filterModifiedLocalFiles(localFilesDict, cosFilesDict):
 
     modifiedLocalFiles = []
     for i, file in enumerate(localFilesDict):
-        cosFileModifyTime = cosFilesDict.get(file, 0)  # cos上没有的文件
+        cosFileModifyTime = cosFilesDict.get(file, '')  # cos上没有的文件
         if localFilesDict[file] > cosFileModifyTime:
             # print(f'{file}\n'
-            #       f'LOC Modify Time: {formatTime(localFilesDict[file])}\n'
-            #       f'COS Modify Time: {formatTime(cosFileModifyTime)}')
+            #       f'LOC Modify Time: {localFilesDict[file]}\n'
+            #       f'COS Modify Time: {cosFileModifyTime}')
             modifiedLocalFiles.append(file)
 
     if modifiedLocalFiles:
