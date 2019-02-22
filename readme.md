@@ -1,8 +1,4 @@
-### 更新py3支持
-`qCloud_COS_Sync_py3.py` 就是支持python3的版本。  
-
-先要安装python3可用的SDK。我用的是 [@a270443177的版本](https://github.com/a270443177/cos-python3-sdk-v4)。  
-> 不过目前上述SDK中`cos_op.py`文件里有两处`print`，会打印所有网络操作的本地和COS文件名，我是注释掉再安装的。  
+### 更新sdk v5
 
 ---
 
@@ -19,35 +15,40 @@
 # 安装环境
 首先，安装官方的SDK。
 ```
-pip install qcloud_cos_v4
+pip install cos-python-sdk-v5
 ```
-[官方 Pyethon SDK 文档](https://www.qcloud.com/document/product/436/6275)
->*这个文档倒是一直有在更新，但因为升级了 Python3.6 想更新下，结果发现这玩意儿只支持到 Python2.7。无奈。*
+[官方 Python SDK 文档](https://cloud.tencent.com/document/product/436/12270)
 
 # 配置参数
 看代码最下端
 ## 初始化客户端
-在【云key密钥/项目密钥】找到appid和配套的key，填写下面4个值。
+在【密钥管理】找到appid和配套的key，填写下面3个值。
 ```
-appid = 88888888
-secret_id = u'YOUR_ID'
-secret_key = u'YOUR_KEY'
-region_info = 'sh' #'sh'=华东,'gz'=华南,'tj'=华北 ,('sgp'~=新加坡)
+appid = 88888888  # your appid
+secret_id = 'your_id'
+secret_key = 'your_key'
 ```
+
+## 地区列表
+可以看自己的bucket下的域名管理/静态地址/`cos.`后面那段。
+```
+region_info = 'ap-shanghai'
+```
+
 ## 填写同步目录
 设定本地特定目录为root，对应bucket根目录。还可以指定仅更新某个目录。
 
 **bucket** 前面appid对应项目下的bucket name。
 ```
-bucket = u'YOUR_BUCKET_NAME'
+bucket_name = 'your_bucket_name'
 ```
 
 **root** 本地根目录，对应bucket根目录。我两台电脑，所以适配了win和mac。
 ```
 if os.name == 'nt':
-    root = u'D:\\OneDrive\\erimus-koo.github.io' #PC
+    root = 'D:\\OneDrive\\yourRoot'  # PC
 else:
-    root = u'/Users/Erimus/OneDrive/erimus-koo.github.io' #MAC
+    root = '/Users/Erimus/OneDrive/yourRoot'  # MAC
 ```
 
 **subFolder** 仅更新root下指定目录
@@ -56,12 +57,24 @@ subFolder = u'' #仅更新root下指定目录
 subFolder = u'bilibili' #无需指定的话直接注释本行
 ```
 
+**maxAge** 可以设置浏览器缓存时间了
+```
+    maxAge = 0  # header的缓存过期时间 0为不设置
+```
+
 ## 打印信息
-**debug** `py3独占` 开启打印较详细信息，关闭打印较精简信息。
+**debug** 开启打印较详细信息，关闭打印较精简信息。
 
 ## 忽略文件/文件夹
 **ignoreFiles / ignoreFolders** 这两个函数可以自己去设定。  
-目前是排除了git相关文件，还有exe、py等等。  
+目前是排除了git相关文件，还有exe、py、psd等等。具体看一下代码就明白了。  
+
+**ignoreFolders** 新增可传入数组，可列举不需要同步的目录。  
+只要整个路径含有该数组中的字符，就会被忽略。
+```
+ignoreFolders = []  # 需要忽略的文件夹 详见isIgnoreFolder
+# ignoreFolders = ['instagram']
+```
 
 # 工作流程
 * 扫描指定的本地目录，搜集基于root的相对地址及文件名，还有修改时间。并搜集空文件夹信息。
@@ -71,10 +84,8 @@ subFolder = u'bilibili' #无需指定的话直接注释本行
 * 删除本地不存在(或ignore)，但COS上存在的文件。
 * 比较空文件夹，同步。逻辑同文件。
 
-# 吐槽
-竟然连一个官方工具都没有！文档写得糊涂得一逼！引导做得也超烂！跟工单磨了整整一天(— A —)凸  
-阿里云虽然也只有一个上传工具，但至少不用我自己写啊！不用看这稀里糊涂的SDK文档啊！  
-也不要吐槽我的代码，我是美工。不过欢迎指正。  
-git还用不大来，纯分享。
+# 注意
+- 新版本好像无法创建空文件夹了。所以本地空文件夹，不会在cos上创建。
+- 偶尔会发生，个别本地文件上传之后，cos端文件虽然是新的，但LastModifyTime却是旧的，导致比较之后，会判定为本地文件较新，于是反复上传本地文件。目前原因未明。
 
 `腾讯云 COS 同步 网站 静态 Python SDK`

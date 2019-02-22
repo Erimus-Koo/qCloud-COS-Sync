@@ -92,8 +92,9 @@ def readLocalFiles(root, subFolder=''):
 
 def isIgnoreFolder(path):  # 忽略文件夹
     # path = formatPath(path)
-    if '.git' in path:
-        return True
+    for k in ['.git', '.svn', '__pycache__', 'miniprogram']:
+        if k in path:
+            return True
 
 
 def isIgnoreFile(fileName):  # 忽略文件
@@ -101,7 +102,7 @@ def isIgnoreFile(fileName):  # 忽略文件
     if fileName[0] == '.':
         return True
 
-    ignoreExts = ['exe', 'py', 'psd', 'ai', 'xlsx']  # ignore extension list
+    ignoreExts = ['exe', 'py', 'pyc', 'psd', 'ai', 'xlsx']  # ignore extension list
     extension = fileName.split('.')[-1].lower()  # 获取扩展名
     if extension in ignoreExts:
         return True
