@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 __author__ = 'Erimus'
-import os
-import json
-import time
-import logging
-from datetime import datetime
-from qcloud_cos import *
 """
 这是一个腾讯云COS的同步工具（仅上传更新部分）。可指定更新个别目录。
 同步源以本地文件为准，镜像到COS，会删除COS上多余的文件。我是用来把本地生成的静态页面同步到COS的。
@@ -21,10 +15,18 @@ pip install -U cos-python-sdk-v5
 如果某个文件，本地没有，但COS对应路径下有，会自动删COS上的文件。
 会忽略部分文件，具体搜ignoreFiles部分。
 """
+
+import os
+import json
+import time
+import logging
+from datetime import datetime
+from qcloud_cos import *
+
 logging.getLogger(__name__)  # 阻止SDK打印的log
 # ====================
 DEFAULT_IGNORE_FOLDERS = ['.git', '.svn', '__pycache__']
-DEFAULT_IGNORE_FILES = ['exe', 'py', 'pyc', 'psd', 'ai', 'xlsx']
+DEFAULT_IGNORE_FILES = ['exe', 'py', 'pyc', 'psd', 'psb', 'ai', 'xlsx']
 # ====================
 
 
@@ -389,7 +391,7 @@ if __name__ == '__main__':
     # subFolder = 'bilibili' # 无需指定的话 直接注释本行
 
     # 忽略以下内容，不进行上传。(请参考顶部两组 default ignore)
-    ignoreFiless = []  # 忽略的文件结尾字符(扩展名)
+    ignoreFiles = []  # 忽略的文件结尾字符(扩展名)
     ignoreFolders = []  # 需要忽略的文件夹
     '''
     上述两个列表，接受字符串，也可以直接传入自定义规则的 function。
@@ -399,7 +401,7 @@ if __name__ == '__main__':
     def my_rule(fn):
         if os.path.getsize(fn) > 10000000:  # 忽略大文件
             return True
-    ignoreFiless = ['exe', 'py', my_rule]
+    ignoreFiles = ['exe', 'py', my_rule]
     '''
 
     maxAge = 0  # header的缓存过期时间 0为不设置
