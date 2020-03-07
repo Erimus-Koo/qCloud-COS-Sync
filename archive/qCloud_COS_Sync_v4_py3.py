@@ -372,9 +372,9 @@ if __name__ == '__main__':
     bucket = 'YOUR_BUCKET_NAME'  # 上述appid对应项目下的bucket name
     # 本机根目录 对应bucket根目录
     if os.name == 'nt':
-        root = 'D:\\OneDrive\\erimus-koo.github.io'  # PC
+        root = 'D:\\OneDrive\\site'  # PC
     else:
-        root = '/Users/Erimus/OneDrive/erimus-koo.github.io'  # MAC
+        root = '/Users/Erimus/OneDrive/site'  # MAC
     subFolder = ''  # 仅更新root下指定目录
     # subFolder = 'bilibili' #无需指定的话直接注释本行
 

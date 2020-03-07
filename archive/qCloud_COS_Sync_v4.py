@@ -61,7 +61,7 @@ def readLocalFiles(root,subFolder=u''):
 			modifyTime = int(os.stat(path+'/'+fileName).st_mtime)
 			localFilesDict[localFile] = modifyTime #输出结果 {'正斜杠相对地址文件名':'int文件修改时间'}
 			# print '%s / %s'%(i+1,total)
-		
+
 		if not os.listdir(path):
 			emptyFolder = path[len(root):]
 			emptyFolder = re.sub(r'\\',u'/',emptyFolder) + '/' #斜杠转换
@@ -198,12 +198,12 @@ def filterModifiedLocalFiles(localFilesDict,cosFilesDict):
 			cosFileModifyTime = 0
 		if localFilesDict[file]>cosFileModifyTime:
 			modifiedLocalFiles.append(file)
-	
+
 	if len(modifiedLocalFiles)==0:
 		print 'All files on COS are the newest.\nNo files need to be uploaded.'
 	else:
 		print 'Modified Files: %s'%len(modifiedLocalFiles)
-	
+
 	return modifiedLocalFiles
 
 
@@ -215,7 +215,7 @@ def uploadToCos(cos_client,bucket,root,localFile):
 	request.set_insert_only(0) # 0是允许覆盖 1是不允许
 	while succes==0 and times<10:
 		times += 1
-		try:	
+		try:
 			upload_file_ret = cos_client.upload_file(request)
 			if upload_file_ret['message']==u'SUCCESS':
 				succes = 1
@@ -240,7 +240,7 @@ def filterExtraCosFiles(localFilesDict,cosFilesDict):
 	else:
 		print 'Extra Files: %s'%len(extraCosFiles)
 
-	return extraCosFiles 
+	return extraCosFiles
 
 
 
@@ -351,9 +351,9 @@ if __name__ == '__main__':
 	bucket = u'YOUR_BUCKET_NAME' #上述appid对应项目下的bucket name
 	# 本机根目录 对应bucket根目录
 	if os.name == 'nt':
-		root = u'D:\\OneDrive\\erimus-koo.github.io' #PC
+		root = u'D:\\OneDrive\\site' #PC
 	else:
-		root = u'/Users/Erimus/OneDrive/erimus-koo.github.io' #MAC
+		root = u'/Users/Erimus/OneDrive/site' #MAC
 	subFolder = u'' #仅更新root下指定目录
 	# subFolder = u'bilibili' #无需指定的话直接注释本行
 
