@@ -308,7 +308,8 @@ class COS():
                     print(f'Delete | {len(once)} files')
                     print(formatJSON(once))
                     break
-                except Exception:
+                except Exception as e:
+                    print(f'Delete tried: {times} times\n{repr(e)}')
                     pass
             else:
                 print(f'Error: delete failed!\n{formatJSON(once)}')
