@@ -28,10 +28,14 @@ logging.getLogger(__name__)  # 阻止SDK打印的log
 # ==================== 默认不同步的文件/文件夹
 
 
-DEFAULT_IGNORE_FILES = ['exe', 'py', 'pyc', 'psd', 'psb', 'ai', 'xlsx',
-                        lambda x:x.split('/')[-1][0] == '.',  # 隐藏文件
-                        ]
-DEFAULT_IGNORE_FOLDERS = ['.git', '.svn', '__pycache__']
+DEFAULT_IGNORE_FILES = [
+    'exe', 'py', 'pyc', 'psd', 'psb', 'ai', 'xlsx',
+    lambda x:x.split('/')[-1][0] == '.',  # 隐藏文件
+]
+DEFAULT_IGNORE_FOLDERS = [
+    '__pycache__',
+    lambda x:any(fd[0] == '.' for fd in x.split('/')),  # 隐藏目录
+]
 
 
 # ==================== 工具
@@ -106,7 +110,7 @@ def readLocalFiles(root, subFolder='', ignoreFiles=None, ignoreFolders=None):
 
 def isIgnoreFile(file, ignoreFiles):  # 忽略文件
     file = formatPath(file)
-    for ext in DEFAULT_IGNORE_FILES + ignoreFiles:
+    for ext in ignoreFiles:
         if isinstance(ext, str) and file.lower().endswith(ext):
             return True
         if callable(ext) and ext(file):  # 传入为函数 且结果为真
@@ -115,7 +119,7 @@ def isIgnoreFile(file, ignoreFiles):  # 忽略文件
 
 def isIgnoreFolder(path, ignoreFolders):  # 忽略文件夹
     path = formatPath(path)
-    for k in DEFAULT_IGNORE_FOLDERS + ignoreFolders:
+    for k in ignoreFolders:
         if isinstance(k, str) and k in path.split('/'):
             return True
         if callable(k) and k(path):  # 传入为函数 且结果为真
@@ -245,6 +249,12 @@ class COS():
                       '\nCheck your appid / secret_id / secret_key / bucket_name'
                       '\nRetry after 30 seconds.')
                 time.sleep(30)
+
+        if ignoreFiles is None:
+            ignoreFiles = DEFAULT_IGNORE_FILES
+        if ignoreFolders is None:
+            ignoreFolders = DEFAULT_IGNORE_FOLDERS
+
         # 初始化常量
         self.cfg = {
             'retry_limit': retry_limit,
