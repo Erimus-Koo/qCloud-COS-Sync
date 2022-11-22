@@ -71,7 +71,8 @@ def readLocalFiles(root, subFolder='', ignoreFiles=None, ignoreFolders=None):
 
     localFilesDict, localEmptyFolders = {}, []
     ignoreFoldersNum = ignoreFilesNum = 0  # ignore计数
-    for path, dirs, files in os.walk(os.path.join(root, subFolder)):
+    for path, dirs, files in os.walk(os.path.join(root, subFolder),
+                                     followlinks=True):
         # 忽略部分目录 不上传
         if isIgnoreFolder(path[len(root):], ignoreFolders):
             ignoreFoldersNum += 1
@@ -79,13 +80,18 @@ def readLocalFiles(root, subFolder='', ignoreFiles=None, ignoreFolders=None):
 
         # 忽略部分文件 不上传
         for i, fileName in enumerate(files[:]):
-            if isIgnoreFile(os.path.join(path, fileName), ignoreFiles):
+            this_file = os.path.join(path, fileName)
+            if isIgnoreFile(this_file, ignoreFiles):
                 ignoreFilesNum += 1
                 continue
 
-            localFile = formatPath(os.path.join(path, fileName)[len(root):])
+            if os.path.islink(this_file):
+                print(f'This is link: {this_file}')
+                continue
+
+            localFile = formatPath(this_file[len(root):])
             # print('local: %s'%localFile)
-            modifyTime = int(os.stat(os.path.join(path, fileName)).st_mtime)
+            modifyTime = int(os.stat(this_file).st_mtime)
             modifyTime = ts2uft(modifyTime)
             # 输出结果 {'/相对地址文件名':'文件修改时间int'}
             localFilesDict[localFile] = modifyTime
