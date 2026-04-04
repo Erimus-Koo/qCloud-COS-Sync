@@ -22,9 +22,9 @@ import os
 import time
 from datetime import datetime
 
-from qcloud_cos import *
+from qcloud_cos import CosConfig, CosS3Client, CosServiceError
 
-logging.getLogger(__name__)  # 阻止SDK打印的log
+logging.getLogger("qcloud_cos").setLevel(logging.WARNING)
 
 # ==================== 默认不同步的文件/文件夹
 
@@ -41,7 +41,7 @@ DEFAULT_IGNORE_FILES = [
 ]
 DEFAULT_IGNORE_FOLDERS = [
     "__pycache__",
-    lambda x: any(fd[0] == "." for fd in x.split("/")),  # 隐藏目录
+    lambda x: any(fd[0] == "." for fd in x.split("/") if fd),  # 隐藏目录
 ]
 
 
@@ -85,7 +85,7 @@ def readLocalFiles(root, subFolder="", ignoreFiles=None, ignoreFolders=None):
             continue
 
         # 忽略部分文件 不上传
-        for i, fileName in enumerate(files[:]):
+        for fileName in files:
             this_file = os.path.join(path, fileName)
             if isIgnoreFile(this_file, ignoreFiles):
                 ignoreFilesNum += 1
@@ -146,7 +146,7 @@ def filterModifiedLocalFiles(localFilesDict, cosFilesDict):
     drawTitle("Filter modified local files")
 
     modifiedLocalFiles = []
-    for i, file in enumerate(localFilesDict):
+    for file in localFilesDict:
         cosFileModifyTime = cosFilesDict.get(file, "")  # cos上没有的文件
         if localFilesDict[file] > cosFileModifyTime:
             # print(f'{file}\n'
@@ -202,11 +202,11 @@ def readCosFiles(cos_client, bucket, subFolder=""):
                 )
                 break  # 访问成功则退出
             except Exception:
-                print(f"ListFolderRequest Failed. [{times}]\nMarder: {marker}")
+                print(f"ListFolderRequest Failed. [{times}]\nMarker: {marker}")
                 time.sleep(3)
-            if times == 100:
-                print(f"===Error===: {folder} info load failed")
-                res = {}
+        else:
+            print(f"===Error===: {subFolder} info load failed")
+            res = {}
 
         if "NextMarker" in res:
             marker = res["NextMarker"]
@@ -224,7 +224,7 @@ def readCosFiles(cos_client, bucket, subFolder=""):
                 mt = k["LastModified"]
                 if ".000Z" not in mt:
                     print("Time format changed!!!", mt)
-                    raise
+                    raise ValueError(f"Time format changed: {mt}")
                 cosFilesDict[fn] = mt
 
     print(f"COS files: {len(cosFilesDict)} / " f"Empty folders: {len(cosEmptyFolders)}")
@@ -337,8 +337,8 @@ class COS:
                         Bucket=self.bucket, Delete=delObjects
                     )
                     if "Error" in res:
-                        print(res["Error"])
-                        raise
+                        raise Exception(f"Delete error: {res['Error']}")
+
                     print(f"Delete | {len(once)} files")
                     print(formatJSON(once))
                     break
